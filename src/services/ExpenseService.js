@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "https://expense-tracker-backend-kqge.onrender.com/api/expenses";
+const API_URL = "REACT_APP_API_URL=https://expense-tracker-backend-kqge.onrender.com";
 
 export const getExpenses = () => axios.get(API_URL);
 
