@@ -1,4 +1,3 @@
-// src/components/Analytics.js
 import { useEffect, useState } from "react";
 import { Paper, Typography, Stack, Chip } from "@mui/material";
 import { getExpenses } from "../services/ExpenseService";
