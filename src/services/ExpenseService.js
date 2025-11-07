@@ -1,15 +1,20 @@
 import axios from "axios";
 
-const API_URL = "REACT_APP_API_URL=https://expense-tracker-backend-kqge.onrender.com";
+// ✅ Correct Base URL
+const API_URL = process.env.REACT_APP_API_URL || "https://expense-tracker-backend-kqge.onrender.com";
 
-export const getExpenses = () => axios.get(API_URL);
+// ✅ Main endpoint
+const EXPENSES_URL = `${API_URL}/api/expenses`;
 
-export const createExpense = (expense) => axios.post(API_URL, expense);
+// ✅ CRUD
+export const getExpenses = () => axios.get(EXPENSES_URL);
 
-export const deleteExpense = (id) => axios.delete(`${API_URL}/${id}`);
+export const createExpense = (expense) => axios.post(EXPENSES_URL, expense);
 
-export const updateExpense = (id, expense) => axios.put(`${API_URL}/${id}`, expense);
+export const deleteExpense = (id) => axios.delete(`${EXPENSES_URL}/${id}`);
 
-// optional helper for category filter (Phase-3)
+export const updateExpense = (id, expense) => axios.put(`${EXPENSES_URL}/${id}`, expense);
+
+// ✅ Optional helper
 export const getByCategory = (category) =>
-  axios.get(`${API_URL}/category`, { params: { category } });
+  axios.get(`${EXPENSES_URL}/category`, { params: { category } });

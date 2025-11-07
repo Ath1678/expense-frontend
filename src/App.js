@@ -3,21 +3,16 @@ import {
   AppBar, Toolbar, Typography, Container, Paper,
   Table, TableHead, TableRow, TableCell, TableBody,
   Button, Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, IconButton, Stack, MenuItem, Box, Chip, Divider
+  TextField, IconButton, Stack, MenuItem, Box, Chip, Divider,
+  Card, CardContent, Grid
 } from "@mui/material";
+
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
+
 import Analytics from "./components/Analytics";
 import dayjs from "dayjs";
-import { Grid } from "@mui/material";
-
-
-
-
-import { Card, CardContent } from "@mui/material";
-
-
 
 import {
   getExpenses,
@@ -34,14 +29,12 @@ export default function App() {
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
-  // form fields
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [amount, setAmount] = useState("");
-  const [date, setDate] = useState("");     // "YYYY-MM-DD"
+  const [date, setDate] = useState("");
   const [notes, setNotes] = useState("");
 
-  // filter state
   const [filterCat, setFilterCat] = useState("");
 
   const resetForm = () => {
@@ -52,71 +45,31 @@ export default function App() {
     setDate("");
     setNotes("");
   };
-// total spent
-const totalSpent = rows.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
 
-// average spent
-const avgSpent = rows.length > 0 ? (totalSpent / rows.length) : 0;
-
-// monthly spent
-const currentMonth = dayjs().format("YYYY-MM");
-const monthlySpent = rows.reduce((sum, r) => {
-  if (r.date && r.date.startsWith(currentMonth)) {
-    return sum + (Number(r.amount) || 0);
-  }
-  return sum;
-}, 0);
-
-// highest spending category
-const categoryTotals = {};
-rows.forEach((r) => {
-  const cat = r.category || "Other";
-  categoryTotals[cat] = (categoryTotals[cat] || 0) + Number(r.amount || 0);
-});
-
-const highestCategory = Object.keys(categoryTotals).length
-  ? Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])[0][0]
-  : "-";
-
-
-  const openCreate = () => {
-    resetForm();
-    setOpen(true);
-  };
-
-  const openEdit = (exp) => {
-    setEditingId(exp.id);
-    setTitle(exp.title ?? "");
-    setCategory(exp.category ?? "");
-    setAmount(exp.amount ?? "");
-    setDate(exp.date ?? "");
-    setNotes(exp.notes ?? "");
-    setOpen(true);
-  };
-
-  const loadAll = () => getExpenses().then((res) => setRows(res.data ?? []));
+  const loadAll = () =>
+    getExpenses().then((res) => {
+      const list = Array.isArray(res.data) ? res.data : [];
+      setRows(list);
+    });
 
   const loadByCategory = (cat) => {
     if (!cat) return loadAll();
-    return getByCategory(cat).then((res) => setRows(res.data ?? []));
+    return getByCategory(cat).then((res) => {
+      const list = Array.isArray(res.data) ? res.data : [];
+      setRows(list);
+    });
   };
 
   useEffect(() => {
     loadAll();
   }, []);
 
-  // Derived totals for dashboard chips
-  const total = useMemo(
-    () => rows.reduce((s, r) => s + (Number(r.amount) || 0), 0),
-    [rows]
-  );
-
   const handleSubmit = async () => {
     const payload = {
       title,
       category,
       amount: Number(amount),
-      date: date || null,   // allow empty
+      date: date || null,
       notes: notes || null,
     };
 
@@ -125,6 +78,7 @@ const highestCategory = Object.keys(categoryTotals).length
     } else {
       await createExpense(payload);
     }
+
     await (filterCat ? loadByCategory(filterCat) : loadAll());
     setOpen(false);
     resetForm();
@@ -141,8 +95,49 @@ const highestCategory = Object.keys(categoryTotals).length
   };
 
   const currency = (n) =>
-    new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })
-      .format(Number(n || 0));
+    new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0
+    }).format(Number(n || 0));
+
+  const totalSpent = rows.reduce(
+    (sum, r) => sum + (Number(r.amount) || 0),
+    0
+  );
+
+  const avgSpent = rows.length ? totalSpent / rows.length : 0;
+
+  const currentMonth = dayjs().format("YYYY-MM");
+  const monthlySpent = rows.reduce((sum, r) => {
+    return r.date?.startsWith(currentMonth)
+      ? sum + Number(r.amount || 0)
+      : sum;
+  }, 0);
+
+  const categoryTotals = {};
+  rows.forEach((r) => {
+    const cat = r.category || "Other";
+    categoryTotals[cat] = (categoryTotals[cat] || 0) + Number(r.amount || 0);
+  });
+
+  const highestCategory =
+    Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
+
+  const openCreate = () => {
+    resetForm();
+    setOpen(true);
+  };
+
+  const openEdit = (exp) => {
+    setEditingId(exp.id);
+    setTitle(exp.title ?? "");
+    setCategory(exp.category ?? "");
+    setAmount(exp.amount ?? "");
+    setDate(exp.date ?? "");
+    setNotes(exp.notes ?? "");
+    setOpen(true);
+  };
 
   return (
     <Box>
@@ -153,8 +148,7 @@ const highestCategory = Object.keys(categoryTotals).length
       </AppBar>
 
       <Container sx={{ mt: 4, mb: 6 }}>
-        {/* Top actions / dashboard */}
-        <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+        <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
           <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
             Add Expense
           </Button>
@@ -169,18 +163,30 @@ const highestCategory = Object.keys(categoryTotals).length
           >
             <MenuItem value="">All</MenuItem>
             {CATEGORIES.map((c) => (
-              <MenuItem key={c} value={c}>{c}</MenuItem>
+              <MenuItem key={c} value={c}>
+                {c}
+              </MenuItem>
             ))}
           </TextField>
 
-          <Chip label={`Total: ${currency(total)}`} />
+          <Chip label={`Total: ${currency(totalSpent)}`} />
         </Stack>
-		
-		<Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-		  <Card><CardContent>Total: ₹{total}</CardContent></Card>
-		  <Card><CardContent>Avg: ₹{Math.round(total / rows.length || 0)}</CardContent></Card>
-		</Stack>
 
+        {/* ✅ summary cards */}
+        <Grid container spacing={2} sx={{ mb: 3 }}>
+          <Grid item xs={12} md={3}>
+            <Card><CardContent> Total ₹{totalSpent.toFixed(0)}</CardContent></Card>
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <Card><CardContent> Monthly ₹{monthlySpent.toFixed(0)}</CardContent></Card>
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <Card><CardContent> Avg ₹{avgSpent.toFixed(0)}</CardContent></Card>
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <Card><CardContent>{highestCategory}</CardContent></Card>
+          </Grid>
+        </Grid>
 
         <Paper>
           <Table>
@@ -194,122 +200,57 @@ const highestCategory = Object.keys(categoryTotals).length
                 <TableCell align="center">Actions</TableCell>
               </TableRow>
             </TableHead>
+
             <TableBody>
               {rows.map((r) => (
-                <TableRow key={r.id} hover>
+                <TableRow key={r.id}>
                   <TableCell>{r.title}</TableCell>
                   <TableCell>{r.category}</TableCell>
                   <TableCell align="right">{currency(r.amount)}</TableCell>
                   <TableCell>{r.date || "-"}</TableCell>
-                  <TableCell sx={{ maxWidth: 300, whiteSpace: "pre-wrap" }}>
-                    {r.notes || "-"}
-                  </TableCell>
+                  <TableCell>{r.notes || "-"}</TableCell>
                   <TableCell align="center">
-                    <IconButton color="primary" onClick={() => openEdit(r)}><EditIcon /></IconButton>
-                    <IconButton color="error" onClick={() => handleDelete(r.id)}><DeleteIcon /></IconButton>
+                    <IconButton onClick={() => openEdit(r)}><EditIcon /></IconButton>
+                    <IconButton onClick={() => handleDelete(r.id)}><DeleteIcon /></IconButton>
                   </TableCell>
                 </TableRow>
               ))}
-              {rows.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} align="center">No expenses yet</TableCell>
-                </TableRow>
-              )}
             </TableBody>
           </Table>
         </Paper>
 
-        {/* Add/Edit Dialog */}
         <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
           <DialogTitle>{editingId ? "Edit Expense" : "Add Expense"}</DialogTitle>
+
           <DialogContent dividers>
-            <Stack spacing={2} sx={{ mt: 1 }}>
-              <TextField
-                label="Title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-              />
-              <TextField
-                label="Category"
-                select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                required
-              >
-                {CATEGORIES.map((c) => <MenuItem key={c} value={c}>{c}</MenuItem>)}
+            <Stack spacing={2}>
+              <TextField label="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
+              <TextField select label="Category" value={category} onChange={(e) => setCategory(e.target.value)}>
+                {CATEGORIES.map((c) => (
+                  <MenuItem key={c} value={c}>{c}</MenuItem>
+                ))}
               </TextField>
-              <TextField
-                label="Amount (₹)"
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                required
-              />
-<Grid container spacing={2} sx={{ mb: 3 }}>
-  <Grid item xs={12} md={3}>
-    <Card>
-      <CardContent>
-        <h3>Total Spent</h3>
-        <p>₹{totalSpent.toFixed(0)}</p>
-      </CardContent>
-    </Card>
-  </Grid>
-  
-  <Grid item xs={12} md={3}>
-    <Card>
-      <CardContent>
-        <h3>Monthly Spent</h3>
-        <p>₹{monthlySpent.toFixed(0)}</p>
-      </CardContent>
-    </Card>
-  </Grid>
 
-  <Grid item xs={12} md={3}>
-    <Card>
-      <CardContent>
-        <h3>Avg Per Expense</h3>
-        <p>₹{avgSpent.toFixed(0)}</p>
-      </CardContent>
-    </Card>
-  </Grid>
+              <TextField type="number" label="Amount" value={amount} onChange={(e) => setAmount(e.target.value)} />
 
-  <Grid item xs={12} md={3}>
-    <Card>
-      <CardContent>
-        <h3>Highest Category</h3>
-        <p>{highestCategory}</p>
-      </CardContent>
-    </Card>
-  </Grid>
-</Grid>
+              <TextField type="date" label="Date" value={date} InputLabelProps={{ shrink: true }}
+                onChange={(e) => setDate(e.target.value)} />
 
-              <TextField
-                label="Date"
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                InputLabelProps={{ shrink: true }}
-              />
-              <TextField
-                label="Notes"
-                multiline
-                rows={3}
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
+              <TextField label="Notes" multiline rows={3}
+                value={notes} onChange={(e) => setNotes(e.target.value)} />
             </Stack>
-            <Divider sx={{ mt: 2 }} />
           </DialogContent>
+
           <DialogActions>
             <Button onClick={() => { setOpen(false); resetForm(); }}>Cancel</Button>
             <Button variant="contained" onClick={handleSubmit}>
-              {editingId ? "Save Changes" : "Add Expense"}
+              {editingId ? "Save" : "Add"}
             </Button>
           </DialogActions>
         </Dialog>
-		<Analytics />
 
+        {/* ✅ analytics placed outside dialog */}
+        <Analytics />
       </Container>
     </Box>
   );
