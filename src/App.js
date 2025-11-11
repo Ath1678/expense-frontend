@@ -10,6 +10,21 @@ export default function App() {
     amount: "",
     category: "",
   });
+useEffect(() => {
+  console.log("expenses:", expenses);
+}, [expenses]);
+
+const totalExpense = Array.isArray(expenses)
+  ? expenses.reduce((sum, expense) => sum + (expense.amount || 0), 0)
+  : 0;
+
+const categoryTotals = Array.isArray(expenses)
+  ? expenses.reduce((acc, expense) => {
+      const cat = expense.category || "Other";
+      acc[cat] = (acc[cat] || 0) + (expense.amount || 0);
+      return acc;
+    }, {})
+  : {};
 
   const loadExpenses = async () => {
     try {
@@ -35,7 +50,7 @@ export default function App() {
 
   return (
     <div className="container">
-      <h1 className="heading">💰 Expense Tracker</h1>
+      <h1 className="heading"> Expense Tracker</h1>
 
       {/* Add Expense Form */}
       <form className="form" onSubmit={submitHandler}>

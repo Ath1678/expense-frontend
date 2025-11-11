@@ -6,29 +6,12 @@ export async function getExpenses() {
     const data = await res.json();
 
     if (!Array.isArray(data)) {
-      console.error("BAD API FORMAT:", data);
+      console.error("❌ BAD DATA", data);
       return [];
     }
-
     return data;
   } catch (err) {
-    console.error("API Error:", err);
+    console.error("❌ API ERROR:", err);
     return [];
-  }
-}
-
-export async function addExpense(expense) {
-  try {
-    const res = await fetch(`${BASE_URL}/api/expenses`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(expense),
-    });
-
-    console.log("SAVE RESULT", await res.json());
-  } catch (err) {
-    console.error("Add Error:", err);
   }
 }
