@@ -1,14 +1,17 @@
-import React from "react";
-
 export default function Analytics({ expenses }) {
-  if (!expenses || expenses.length === 0) return <p>No analytics</p>;
-
-  const total = expenses.reduce((sum, exp) => sum + Number(exp.amount || 0), 0);
+  if (!Array.isArray(expenses)) {
+    console.warn("Analytics: not array", expenses);
+    return null;
+  }
 
   return (
-    <div style={{ marginTop: "20px" }}>
+    <div>
       <h2>Analytics</h2>
-      <h3>Total Expense: ₹{total}</h3>
+      {expenses.length === 0 ? (
+        <p>No data</p>
+      ) : (
+        expenses.map((e) => <div key={e.id}>{e.title}</div>)
+      )}
     </div>
   );
 }

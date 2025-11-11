@@ -1,100 +1,57 @@
 import React, { useEffect, useState } from "react";
 import { getExpenses, addExpense } from "./ExpenseService";
-import Analytics from "./Analytics";
-import "./App.css";
 
-export default function App() {
+function App() {
   const [expenses, setExpenses] = useState([]);
-  const [form, setForm] = useState({
-    title: "",
-    amount: "",
-    category: "",
-  });
-useEffect(() => {
-  console.log("expenses:", expenses);
-}, [expenses]);
-
-const totalExpense = Array.isArray(expenses)
-  ? expenses.reduce((sum, expense) => sum + (expense.amount || 0), 0)
-  : 0;
-
-const categoryTotals = Array.isArray(expenses)
-  ? expenses.reduce((acc, expense) => {
-      const cat = expense.category || "Other";
-      acc[cat] = (acc[cat] || 0) + (expense.amount || 0);
-      return acc;
-    }, {})
-  : {};
-
-  const loadExpenses = async () => {
-    try {
-      const data = await getExpenses();
-      setExpenses(data || []);
-    } catch (err) {
-      console.error("Failed loading expenses:", err);
-    }
-  };
+  const [title, setTitle] = useState("");
+  const [amount, setAmount] = useState("");
 
   useEffect(() => {
-    loadExpenses();
+    load();
   }, []);
 
-  const submitHandler = async (e) => {
-    e.preventDefault();
-    if (!form.title || !form.amount) return;
+  async function load() {
+    const res = await getExpenses();
+    setExpenses(Array.isArray(res) ? res : []);
+  }
 
-    await addExpense(form);
-    setForm({ title: "", amount: "", category: "" });
-    loadExpenses();
-  };
+  async function handleAdd() {
+    if (!title || !amount) return;
+    await addExpense({ title, amount });
+    setTitle("");
+    setAmount("");
+    load();
+  }
+
+  const total = expenses.reduce((s, e) => s + (e.amount || 0), 0);
 
   return (
-    <div className="container">
-      <h1 className="heading"> Expense Tracker</h1>
+    <div>
+      <h1>Expenses</h1>
 
-      {/* Add Expense Form */}
-      <form className="form" onSubmit={submitHandler}>
-        <input
-          type="text"
-          placeholder="Title"
-          value={form.title}
-          onChange={(e) => setForm({ ...form, title: e.target.value })}
-          required
-        />
+      <input
+        placeholder="Title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+      />
 
-        <input
-          type="number"
-          placeholder="Amount"
-          value={form.amount}
-          onChange={(e) => setForm({ ...form, amount: e.target.value })}
-          required
-        />
+      <input
+        placeholder="Amount"
+        value={amount}
+        onChange={(e) => setAmount(e.target.value)}
+      />
 
-        <input
-          type="text"
-          placeholder="Category"
-          value={form.category}
-          onChange={(e) => setForm({ ...form, category: e.target.value })}
-        />
+      <button onClick={handleAdd}>Add</button>
 
-        <button type="submit">Add</button>
-      </form>
+      <h2>Total: {total}</h2>
 
-      {/* Expense List */}
-      <h2>Expenses</h2>
-      <ul className="list">
-        {expenses.length === 0 && <p>No expenses found</p>}
-
-        {expenses.map((exp) => (
-          <li key={exp.id}>
-            <span>{exp.title}</span>
-            <span>₹{exp.amount}</span>
-            <span>{exp.category || "-"}</span>
-          </li>
-        ))}
-      </ul>
-
-      <Analytics expenses={expenses} />
+      {expenses?.map((e) => (
+        <p key={e.id}>
+          {e.title} — {e.amount}
+        </p>
+      ))}
     </div>
   );
 }
+
+export default App;
