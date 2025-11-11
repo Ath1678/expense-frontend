@@ -1,20 +1,28 @@
 import axios from "axios";
 
-// ✅ Correct Base URL
-const API_URL = process.env.REACT_APP_API_URL || "https://expense-tracker-backend-kqge.onrender.com";
+const API_BASE_URL =
+  process.env.REACT_APP_API_URL || "http://localhost:8080";
 
-// ✅ Main endpoint
-const EXPENSES_URL = `${API_URL}/api/expenses`;
+const ExpenseService = {
+  getExpenses: async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/api/expenses`);
+      return res.data;
+    } catch (err) {
+      console.error("Error fetching expenses:", err);
+      return [];
+    }
+  },
 
-// ✅ CRUD
-export const getExpenses = () => axios.get(EXPENSES_URL);
+  addExpense: async (expense) => {
+    try {
+      const res = await axios.post(`${API_BASE_URL}/api/expenses`, expense);
+      return res.data;
+    } catch (err) {
+      console.error("Error adding expense:", err);
+      throw err;
+    }
+  },
+};
 
-export const createExpense = (expense) => axios.post(EXPENSES_URL, expense);
-
-export const deleteExpense = (id) => axios.delete(`${EXPENSES_URL}/${id}`);
-
-export const updateExpense = (id, expense) => axios.put(`${EXPENSES_URL}/${id}`, expense);
-
-// ✅ Optional helper
-export const getByCategory = (category) =>
-  axios.get(`${EXPENSES_URL}/category`, { params: { category } });
+export default ExpenseService;

@@ -1,26 +1,21 @@
 import React from "react";
 
-const Analytics = ({ expenses }) => {
-  if (!Array.isArray(expenses) || expenses.length === 0) {
-    return <></>;
-  }
+export default function Analytics({ expenses }) {
+  if (!expenses || expenses.length === 0)
+    return <h3>No analytics available</h3>;
 
-  let total = 0;
-  try {
-    total = expenses.reduce((sum, item) => {
-      const amt = Number(item.amount) || 0;
-      return sum + amt;
-    }, 0);
-  } catch (err) {
-    console.error("Analytics calculation error", err);
-  }
+  const total = expenses.reduce(
+    (sum, e) => sum + (parseFloat(e.amount) || 0),
+    0
+  );
+  const avg = (total / expenses.length).toFixed(2);
 
   return (
-    <div style={{ marginTop: "20px" }}>
+    <div>
       <h2>Analytics</h2>
-      <h3>Total Spent: ₹{total}</h3>
+      <p>Total expenses: ₹{total}</p>
+      <p>Average expense: ₹{avg}</p>
+      <p>Count: {expenses.length}</p>
     </div>
   );
-};
-
-export default Analytics;
+}
