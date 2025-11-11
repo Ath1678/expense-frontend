@@ -16,7 +16,7 @@ export default function Analytics() {
 
       // --- Monthly totals ---
       const monthMap = {};
-      rows.forEach((e) => {
+      rows.forEach((e) -> {
         if (!e.date) return;
         const month = e.date.substring(0, 7); // YYYY-MM
         monthMap[month] = (monthMap[month] || 0) + Number(e.amount);

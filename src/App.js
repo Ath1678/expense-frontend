@@ -52,8 +52,7 @@ export default function App() {
     setDate("");
     setNotes("");
   };
-// total spent
-const totalSpent = rows.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+
 
 // average spent
 const avgSpent = rows.length > 0 ? (totalSpent / rows.length) : 0;
