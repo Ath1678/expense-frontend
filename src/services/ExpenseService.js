@@ -1,28 +1,19 @@
-import axios from "axios";
+const API_URL = process.env.REACT_APP_API_URL;
 
-const API_BASE_URL =
-  process.env.REACT_APP_API_URL || "http://localhost:8080";
-
-const ExpenseService = {
-  getExpenses: async () => {
-    try {
-      const res = await axios.get(`${API_BASE_URL}/api/expenses`);
-      return res.data;
-    } catch (err) {
-      console.error("Error fetching expenses:", err);
-      return [];
-    }
-  },
-
-  addExpense: async (expense) => {
-    try {
-      const res = await axios.post(`${API_BASE_URL}/api/expenses`, expense);
-      return res.data;
-    } catch (err) {
-      console.error("Error adding expense:", err);
-      throw err;
-    }
-  },
+const getExpenses = async () => {
+  const res = await fetch(`${API_URL}/api/expenses`);
+  return await res.json();
 };
 
-export default ExpenseService;
+const addExpense = async (data) => {
+  await fetch(`${API_URL}/api/expenses`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+};
+
+export default {
+  getExpenses,
+  addExpense,
+};
