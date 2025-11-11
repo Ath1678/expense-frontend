@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { getExpenses, addExpense } from "./ExpenseService";
+import Analytics from "./Analytics";
 
 function App() {
   const [expenses, setExpenses] = useState([]);
@@ -27,14 +28,13 @@ function App() {
 
   return (
     <div>
-      <h1>Expenses</h1>
+      <h1>Expense Tracker</h1>
 
       <input
         placeholder="Title"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
-
       <input
         placeholder="Amount"
         value={amount}
@@ -45,11 +45,13 @@ function App() {
 
       <h2>Total: {total}</h2>
 
-      {expenses?.map((e) => (
+      {expenses.map((e) => (
         <p key={e.id}>
-          {e.title} — {e.amount}
+           {e.title} — ₹{e.amount}
         </p>
       ))}
+
+      <Analytics expenses={expenses} />
     </div>
   );
 }
