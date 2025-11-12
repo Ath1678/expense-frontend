@@ -1,59 +1,39 @@
-import React, { useState, useEffect } from "react";
-import { getExpenses, addExpense } from "./ExpenseService";
-import Analytics from "./Analytics";
+import { useEffect, useState } from "react";
+import Navbar from "./components/Navbar";
+import SummaryCard from "./components/SummaryCard";
+import ExpenseForm from "./components/ExpenseForm";
+import ExpenseList from "./components/ExpenseList";
+import { getExpenses, addExpense } from "./services/api";
+import "./App.css";
 
-function App() {
-  const [expenses, setExpenses] = useState([]);
-  const [title, setTitle] = useState("");
-  const [amount, setAmount] = useState("");
+export default function App() {
+  const [data, setData] = useState([]);
+
+  async function load() {
+    const res = await getExpenses();
+    setData(res);
+  }
+
+  async function handleAdd(x) {
+    await addExpense(x);
+    load();
+  }
 
   useEffect(() => {
     load();
   }, []);
 
-  async function load() {
-    const res = await getExpenses();
-    setExpenses(Array.isArray(res) ? res : []);
-  }
-
-  async function handleAdd() {
-    if (!title || !amount) return;
-    await addExpense({ title, amount });
-    setTitle("");
-    setAmount("");
-    load();
-  }
-
-  const total = expenses.reduce((s, e) => s + (e.amount || 0), 0);
+  const total = data.reduce((s, x) => s + Number(x.amount), 0);
 
   return (
     <div>
-      <h1>Expense Tracker</h1>
+      <Navbar />
 
-      <input
-        placeholder="Title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
-      <input
-        placeholder="Amount"
-        value={amount}
-        onChange={(e) => setAmount(e.target.value)}
-      />
-
-      <button onClick={handleAdd}>Add</button>
-
-      <h2>Total: {total}</h2>
-
-      {expenses.map((e) => (
-        <p key={e.id}>
-           {e.title} — ₹{e.amount}
-        </p>
-      ))}
-
-      <Analytics expenses={expenses} />
+      <div className="container">
+        <SummaryCard total={total} />
+        <ExpenseForm onAdd={handleAdd} />
+        <ExpenseList items={data} />
+      </div>
     </div>
   );
 }
-
-export default App;
