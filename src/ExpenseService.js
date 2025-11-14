@@ -1,4 +1,4 @@
-const API_URL = "https://expense-tracker-backend-kqge.onrender.com/api/expenses";
+const API_URL = "https://expense-tracker-backend-1-jsb7.onrender.com/api/expenses";
 
 export async function getExpenses() {
   try {
