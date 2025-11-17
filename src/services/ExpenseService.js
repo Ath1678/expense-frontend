@@ -1,36 +1,20 @@
-const API_URL = "https://expense-tracker-backend-kqge.onrender.com/api/expenses";
+const API_URL = "https://expense-tracker-backend-1-jsb7.onrender.com/api/expenses";
 
 export async function getExpenses() {
-  try {
-    const res = await fetch(API_URL);
-    if (!res.ok) throw new Error("Failed to fetch expenses");
-    return await res.json();
-  } catch (err) {
-    console.error("❌ Fetch Error:", err);
-    return [];
-  }
+  const res = await fetch(API_URL);
+  return res.json();
 }
 
 export async function addExpense(expense) {
-  try {
-    const res = await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(expense),
-    });
-    if (!res.ok) throw new Error("Failed to add expense");
-  } catch (err) {
-    console.error("❌ Add Error:", err);
-  }
+  await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(expense),
+  });
 }
 
 export async function deleteExpense(id) {
-  try {
-    const res = await fetch(`${API_URL}/${id}`, {
-      method: "DELETE",
-    });
-    if (!res.ok) throw new Error("Failed to delete expense");
-  } catch (err) {
-    console.error("❌ Delete Error:", err);
-  }
+  await fetch(`${API_URL}/${id}`, {
+    method: "DELETE",
+  });
 }
