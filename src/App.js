@@ -1,65 +1,86 @@
 import React, { useEffect, useState } from "react";
-import { getExpenses, addExpense, deleteExpense } from "./services/ExpenseService";
+import ExpenseService from "./services/ExpenseService";
 
 export default function App() {
-  const [expenses, setExpenses] = useState([]);
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("General");
+  const [date, setDate] = useState("");
+  const [notes, setNotes] = useState("");
+  const [expenses, setExpenses] = useState([]);
 
+  // Load expenses
   useEffect(() => {
-    fetchExpenses();
+    loadExpenses();
   }, []);
 
-  async function fetchExpenses() {
-    const data = await getExpenses();
-    setExpenses(data);
+  async function loadExpenses() {
+    const data = await ExpenseService.getExpenses();
+    setExpenses(data || []);
   }
 
-  async function handleAdd() {
-    if (!title || !amount) return alert("Please fill all fields!");
-    const newExpense = { title, amount: parseFloat(amount), category };
-    await addExpense(newExpense);
+  // Add Expense
+  async function addExpense() {
+    if (!title || !amount || !date) {
+      alert("Please enter Title, Amount, and Date");
+      return;
+    }
+
+    const expense = {
+      title,
+      amount: Number(amount),
+      category,
+      date,
+      notes
+    };
+
+    await ExpenseService.addExpense(expense);
+    loadExpenses();
+
+    // reset
     setTitle("");
     setAmount("");
     setCategory("General");
-    fetchExpenses();
+    setDate("");
+    setNotes("");
   }
 
-  async function handleDelete(id) {
-    await deleteExpense(id);
-    fetchExpenses();
+  // Delete expense
+  async function deleteExpense(id) {
+    await ExpenseService.deleteExpense(id);
+    loadExpenses();
   }
 
-  const total = expenses.reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
+  const total = expenses.reduce((sum, e) => sum + e.amount, 0);
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center py-10">
-      <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-2xl">
-        <h1 className="text-3xl font-bold text-center text-blue-600 mb-6">
-          Expense Tracker
-        </h1>
+    <div className="container mx-auto p-8">
+      <h1 className="text-3xl font-bold text-center mb-6">Expense Tracker</h1>
+
+      <div className="bg-white shadow-md p-6 rounded-lg max-w-2xl mx-auto">
 
         {/* Form */}
-        <div className="flex flex-wrap gap-3 mb-6 justify-center">
+        <div className="grid grid-cols-2 gap-4">
+
           <input
-            type="text"
+            className="border p-2 rounded"
             placeholder="Title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="border border-gray-300 rounded-md px-3 py-2 w-full sm:w-1/3 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+
           <input
-            type="number"
+            className="border p-2 rounded"
             placeholder="Amount"
+            type="number"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="border border-gray-300 rounded-md px-3 py-2 w-full sm:w-1/4 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+
           <select
+            className="border p-2 rounded"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="border border-gray-300 rounded-md px-3 py-2 w-full sm:w-1/4 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option>General</option>
             <option>Food</option>
@@ -67,59 +88,67 @@ export default function App() {
             <option>Shopping</option>
             <option>Entertainment</option>
           </select>
-          <button
-            onClick={handleAdd}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md px-5 py-2 w-full sm:w-auto transition"
-          >
-            + Add Expense
-          </button>
+
+          <input
+            className="border p-2 rounded"
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+          />
+
+          <textarea
+            className="border p-2 rounded col-span-2"
+            placeholder="Notes (optional)"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+          ></textarea>
+
         </div>
 
-        <hr className="my-4" />
+        <button
+          onClick={addExpense}
+          className="mt-4 w-full bg-blue-600 text-white p-2 rounded font-semibold"
+        >
+          + Add Expense
+        </button>
 
         {/* Total */}
-        <h2 className="text-xl font-semibold text-gray-700 mb-4">
-          Total: <span className="text-green-600 font-bold">₹{total}</span>
-        </h2>
+        <h2 className="text-xl font-bold mt-6">Total: ₹{total}</h2>
 
-        {/* Expense List */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-blue-50 text-gray-700 uppercase text-sm">
-                <th className="px-4 py-3">Title</th>
-                <th className="px-4 py-3">Amount</th>
-                <th className="px-4 py-3">Category</th>
-                <th className="px-4 py-3 text-center">Actions</th>
+        {/* Table */}
+        <table className="w-full mt-4 border">
+          <thead>
+            <tr className="bg-gray-200">
+              <th className="p-2">Title</th>
+              <th className="p-2">Amount</th>
+              <th className="p-2">Category</th>
+              <th className="p-2">Date</th>
+              <th className="p-2">Notes</th>
+              <th className="p-2">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {expenses.map((exp) => (
+              <tr key={exp.id} className="text-center border-t">
+                <td className="p-2">{exp.title}</td>
+                <td className="p-2">₹{exp.amount}</td>
+                <td className="p-2">{exp.category}</td>
+                <td className="p-2">{exp.date || "-"}</td>
+                <td className="p-2">{exp.notes || "-"}</td>
+                <td className="p-2">
+                  <button
+                    className="bg-red-500 text-white px-3 py-1 rounded"
+                    onClick={() => deleteExpense(exp.id)}
+                  >
+                    Delete
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {expenses.length === 0 ? (
-                <tr>
-                  <td colSpan="4" className="text-center py-5 text-gray-400">
-                    No expenses added yet.
-                  </td>
-                </tr>
-              ) : (
-                expenses.map((exp) => (
-                  <tr key={exp.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium text-gray-800">{exp.title}</td>
-                    <td className="px-4 py-3 text-blue-600 font-semibold">₹{exp.amount}</td>
-                    <td className="px-4 py-3">{exp.category}</td>
-                    <td className="px-4 py-3 text-center">
-                      <button
-                        onClick={() => handleDelete(exp.id)}
-                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded-md transition"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+
+        </table>
       </div>
     </div>
   );
